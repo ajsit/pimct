@@ -1,10 +1,20 @@
 image: smithaj/pimc:postinstall
 
-
+before_script:
+  - apt-get update -qq && apt-get install -y -qq sqlite3 libsqlite3-dev nodejs curl gnupg build-essential
+  - gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+  - curl -sSL https://get.rvm.io | sudo bash -s stable
+  - usermod -a -G rvm `whoami`
+  - rvm install ruby
+  - rvm --default use ruby
+  - gem install bundler --no-rdoc --no-ri
+  - ruby -v
 
 stages:
+  - build
   - test
   - dast
+
 
 dependency_scanning:
   stage: test
@@ -27,6 +37,19 @@ dependency_scanning:
         "registry.gitlab.com/gitlab-org/security-products/dependency-scanning:$SP_VERSION" /code
   artifacts:
     paths: [gl-dependency-scanning-report.json]
+
+
+rspec:
+  stage: test
+  script:
+    - bundle exec rspec
+
+rubocop:
+  stage: test
+  script:
+    - bundle exec rubocop
+
+
 
 
 dast:
